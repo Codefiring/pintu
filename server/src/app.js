@@ -1,8 +1,8 @@
 import Fastify from 'fastify';
 import multipart from '@fastify/multipart';
 
-export const MAX_FILES = 30;
-export const MAX_FILE_SIZE = 20 * 1024 * 1024;
+const MAX_FILES = 30;
+const MAX_FILE_SIZE = 20 * 1024 * 1024;
 
 export function buildApp(opts = {}) {
   const app = Fastify({
