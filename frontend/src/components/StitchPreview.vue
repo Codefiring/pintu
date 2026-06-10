@@ -8,7 +8,7 @@ const props = defineProps({
   background: { type: String, default: '#ffffff' },
 });
 
-const PREVIEW_EXTENT = 320; // displayed px across the stitch axis
+const PREVIEW_EXTENT = 320; // displayed px across the cross axis (perpendicular to the stitch)
 
 const vertical = computed(() => props.direction === 'vertical');
 const crossMax = computed(() =>
