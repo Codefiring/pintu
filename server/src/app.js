@@ -1,5 +1,6 @@
 import Fastify from 'fastify';
 import multipart from '@fastify/multipart';
+import stitchRoutes from './routes/stitch.js';
 
 const MAX_FILES = 30;
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
@@ -18,6 +19,8 @@ export function buildApp(opts = {}) {
       fieldSize: 64 * 1024,
     },
   });
+
+  app.register(stitchRoutes);
 
   app.get('/api/health', async () => ({ status: 'ok' }));
 
