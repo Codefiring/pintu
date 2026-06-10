@@ -9,5 +9,8 @@ app.listen({ port, host: '0.0.0.0' }).catch((err) => {
 });
 
 process.on('SIGTERM', () => {
-  app.close().then(() => process.exit(0));
+  app.close().then(
+    () => process.exit(0),
+    () => process.exit(1)
+  );
 });
