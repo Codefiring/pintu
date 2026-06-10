@@ -23,6 +23,16 @@ export function buildApp(opts = {}) {
     },
   });
 
+  app.setErrorHandler((err, _req, reply) => {
+    if (err.code === 'FST_REQ_FILE_TOO_LARGE') {
+      return reply.code(413).send({ error: 'FILE_TOO_LARGE' });
+    }
+    if (err.code === 'FST_FILES_LIMIT') {
+      return reply.code(413).send({ error: 'TOO_MANY_FILES' });
+    }
+    reply.send(err);
+  });
+
   app.register(stitchRoutes);
 
   const distDir = fileURLToPath(new URL('../../frontend/dist', import.meta.url));

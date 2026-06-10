@@ -39,4 +39,11 @@ describe('buildLayout', () => {
 
     expect(layout.output).toEqual({ format: 'jpeg', quality: 85 });
   });
+
+  it('coerces spacing to a clamped integer', () => {
+    const opts = { direction: 'vertical', background: '#ffffff', format: 'png', quality: 90 };
+    expect(buildLayout(items, { ...opts, spacing: 1.5 }).spacing).toBe(2);
+    expect(buildLayout(items, { ...opts, spacing: NaN }).spacing).toBe(0);
+    expect(buildLayout(items, { ...opts, spacing: 9999 }).spacing).toBe(500);
+  });
 });

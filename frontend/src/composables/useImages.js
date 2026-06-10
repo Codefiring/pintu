@@ -3,6 +3,7 @@ import { clampTrim } from '../lib/trim.js';
 
 export const MAX_FILES = 30;
 export const MAX_FILE_SIZE = 20 * 1024 * 1024;
+export const MAX_TOTAL_SIZE = 200 * 1024 * 1024;
 
 let nextId = 1;
 
@@ -24,6 +25,7 @@ export function useImages(dimensionLoader = loadDimensions) {
 
   async function addFiles(files) {
     const rejected = [];
+    let total = items.reduce((sum, it) => sum + it.file.size, 0);
     for (const file of files) {
       if (items.length >= MAX_FILES) {
         rejected.push({ name: file.name, reason: 'too_many' });
@@ -37,9 +39,14 @@ export function useImages(dimensionLoader = loadDimensions) {
         rejected.push({ name: file.name, reason: 'too_large' });
         continue;
       }
+      if (total + file.size > MAX_TOTAL_SIZE) {
+        rejected.push({ name: file.name, reason: 'total_too_large' });
+        continue;
+      }
       try {
         const { url, width, height } = await dimensionLoader(file);
         items.push({ id: nextId++, file, url, width, height, trimStart: 0, trimEnd: 0 });
+        total += file.size;
       } catch {
         rejected.push({ name: file.name, reason: 'not_image' });
       }

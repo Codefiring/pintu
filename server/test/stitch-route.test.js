@@ -131,4 +131,30 @@ describe('POST /api/stitch — errors', () => {
     expect(res.statusCode).toBe(413);
     expect(res.json()).toMatchObject({ error: 'OUTPUT_TOO_LARGE', height: 80000 });
   });
+
+  it('413 when a single file exceeds the per-file limit', async () => {
+    app = buildApp();
+    const big = Buffer.alloc(21 * 1024 * 1024);
+    const ok = await solidImage(50, 50, '#ff0000');
+
+    const res = await post(app, buildForm([big, ok], baseLayout));
+
+    expect(res.statusCode).toBe(413);
+    expect(res.json().error).toBe('FILE_TOO_LARGE');
+  });
+
+  it('413 when more than 30 files are uploaded', async () => {
+    app = buildApp();
+    const small = await solidImage(10, 10, '#ff0000');
+    const files = Array.from({ length: 31 }, () => small);
+    const layout = {
+      ...baseLayout,
+      items: Array.from({ length: 30 }, () => ({ trimStart: 0, trimEnd: 0 })),
+    };
+
+    const res = await post(app, buildForm(files, layout));
+
+    expect(res.statusCode).toBe(413);
+    expect(res.json().error).toBe('TOO_MANY_FILES');
+  });
 });

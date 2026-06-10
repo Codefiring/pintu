@@ -46,23 +46,37 @@ export default async function stitchRoutes(app) {
     let layout = null;
     let total = 0;
 
-    for await (const part of req.parts()) {
-      if (part.type === 'file') {
-        const buf = await part.toBuffer();
-        total += buf.length;
-        if (total > MAX_TOTAL_SIZE) {
-          reply.code(413).send({ error: 'TOTAL_TOO_LARGE' });
-          req.raw.resume(); // discard the rest of the upload so the socket frees promptly
-          return reply;
-        }
-        buffers.push(buf);
-      } else if (part.fieldname === 'layout') {
-        try {
-          layout = JSON.parse(part.value);
-        } catch {
-          return reply.code(400).send({ error: 'INVALID_LAYOUT_JSON' });
+    try {
+      for await (const part of req.parts()) {
+        if (part.type === 'file') {
+          const buf = await part.toBuffer();
+          total += buf.length;
+          if (total > MAX_TOTAL_SIZE) {
+            reply.code(413).send({ error: 'TOTAL_TOO_LARGE' });
+            req.raw.resume(); // discard the rest of the upload so the socket frees promptly
+            return reply;
+          }
+          buffers.push(buf);
+        } else if (part.fieldname === 'layout') {
+          try {
+            layout = JSON.parse(part.value);
+          } catch {
+            return reply.code(400).send({ error: 'INVALID_LAYOUT_JSON' });
+          }
         }
       }
+    } catch (err) {
+      if (err.code === 'FST_REQ_FILE_TOO_LARGE') {
+        reply.code(413).send({ error: 'FILE_TOO_LARGE' });
+        req.raw.resume();
+        return reply;
+      }
+      if (err.code === 'FST_FILES_LIMIT') {
+        reply.code(413).send({ error: 'TOO_MANY_FILES' });
+        req.raw.resume();
+        return reply;
+      }
+      throw err;
     }
 
     // !layout short-circuits; validateLayout.errors is null on success, an array on failure

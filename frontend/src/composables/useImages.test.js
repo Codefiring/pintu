@@ -77,4 +77,15 @@ describe('useImages', () => {
     setTrim(items[0].id, 'horizontal', { trimStart: 90, trimEnd: 50 });
     expect(items[0]).toMatchObject({ trimStart: 90, trimEnd: 9 }); // 100px extent
   });
+
+  it('rejects files that would exceed the 200MB total cap', async () => {
+    const { items, addFiles } = useImages(fakeLoader);
+    const files = Array.from({ length: 11 }, (_, i) =>
+      fakeFile(`f${i}.png`, 'image/png', 20 * 1024 * 1024)
+    );
+    const rejected = await addFiles(files);
+
+    expect(items).toHaveLength(10);
+    expect(rejected).toEqual([{ name: 'f10.png', reason: 'total_too_large' }]);
+  });
 });

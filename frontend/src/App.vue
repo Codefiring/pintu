@@ -33,6 +33,7 @@ const REASONS = {
   too_many: '超过 30 张上限',
   not_image: '不是有效图片',
   too_large: '文件过大，单张最大 20MB',
+  total_too_large: '总大小超过 200MB 上限',
 };
 
 async function onFiles(files) {

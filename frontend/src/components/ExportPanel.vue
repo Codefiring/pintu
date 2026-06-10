@@ -20,7 +20,7 @@ const emit = defineEmits(['stitch']);
     </label>
     <label>
       间距 (px)
-      <input type="number" min="0" max="500" v-model.number="options.spacing" />
+      <input type="number" min="0" max="500" step="1" v-model.number="options.spacing" />
     </label>
     <label>
       背景颜色
