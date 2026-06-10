@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { stitch } from '../src/lib/stitcher.js';
+import { stitch, MAX_DIMENSION } from '../src/lib/stitcher.js';
 import { solidImage, pixelAt } from './helpers.js';
 
 describe('stitch — vertical core', () => {
@@ -99,5 +99,42 @@ describe('stitch — trims, spacing, direction, formats', () => {
     // JPEG magic bytes
     expect(data[0]).toBe(0xff);
     expect(data[1]).toBe(0xd8);
+  });
+});
+
+describe('stitch — errors', () => {
+  it('rejects an undecodable buffer with INVALID_IMAGE and the index', async () => {
+    const ok = await solidImage(50, 50, '#ff0000');
+    const garbage = Buffer.from('not an image at all');
+
+    await expect(stitch([ok, garbage], {})).rejects.toMatchObject({
+      name: 'StitchError',
+      code: 'INVALID_IMAGE',
+      index: 1,
+    });
+  });
+
+  it('rejects trims that consume the whole image with INVALID_TRIM', async () => {
+    const a = await solidImage(50, 100, '#ff0000');
+    const b = await solidImage(50, 100, '#0000ff');
+
+    await expect(
+      stitch([a, b], { items: [{ trimStart: 60, trimEnd: 40 }, { trimStart: 0, trimEnd: 0 }] })
+    ).rejects.toMatchObject({ code: 'INVALID_TRIM', index: 0 });
+  });
+
+  it('rejects outputs exceeding MAX_DIMENSION with the computed size', async () => {
+    const tall = await solidImage(10, 16000, '#ff0000');
+    const buffers = [tall, tall, tall, tall, tall]; // 80,000 px > 65,000
+
+    await expect(stitch(buffers, {})).rejects.toMatchObject({
+      code: 'OUTPUT_TOO_LARGE',
+      height: 80000,
+    });
+    expect(MAX_DIMENSION).toBe(65000);
+  });
+
+  it('rejects an empty input array', async () => {
+    await expect(stitch([], {})).rejects.toMatchObject({ code: 'INVALID_INPUT' });
   });
 });
