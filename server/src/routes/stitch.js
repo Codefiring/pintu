@@ -1,7 +1,7 @@
 import Ajv from 'ajv';
 import { stitch, StitchError } from '../lib/stitcher.js';
 
-const MAX_FILES = 30;
+const MAX_FILES = 30; // duplicated in app.js multipart limits and the frontend by design
 const MAX_TOTAL_SIZE = 200 * 1024 * 1024;
 
 const layoutSchema = {
@@ -51,7 +51,9 @@ export default async function stitchRoutes(app) {
         const buf = await part.toBuffer();
         total += buf.length;
         if (total > MAX_TOTAL_SIZE) {
-          return reply.code(413).send({ error: 'TOTAL_TOO_LARGE' });
+          reply.code(413).send({ error: 'TOTAL_TOO_LARGE' });
+          req.raw.resume(); // discard the rest of the upload so the socket frees promptly
+          return reply;
         }
         buffers.push(buf);
       } else if (part.fieldname === 'layout') {
@@ -63,6 +65,7 @@ export default async function stitchRoutes(app) {
       }
     }
 
+    // !layout short-circuits; validateLayout.errors is null on success, an array on failure
     if (!layout || !validateLayout(layout)) {
       return reply
         .code(400)

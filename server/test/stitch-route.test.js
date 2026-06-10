@@ -46,7 +46,7 @@ describe('POST /api/stitch', () => {
 
     expect(res.statusCode).toBe(200);
     expect(res.headers['content-type']).toBe('image/png');
-    expect(res.headers['content-disposition']).toContain('pintu.png');
+    expect(res.headers['content-disposition']).toBe('attachment; filename="pintu.png"');
 
     const meta = await sharp(res.rawPayload).metadata();
     expect(meta.width).toBe(100);
@@ -65,6 +65,6 @@ describe('POST /api/stitch', () => {
 
     expect(res.statusCode).toBe(200);
     expect(res.headers['content-type']).toBe('image/jpeg');
-    expect(res.headers['content-disposition']).toContain('pintu.jpg');
+    expect(res.headers['content-disposition']).toBe('attachment; filename="pintu.jpg"');
   });
 });
