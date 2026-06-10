@@ -24,6 +24,9 @@ export async function stitch(buffers, layout = {}) {
   const output = { ...DEFAULT_OUTPUT, ...layout.output };
   const items = layout.items ?? buffers.map(() => ({ trimStart: 0, trimEnd: 0 }));
   const vertical = direction === 'vertical';
+  if (spacing < 0) {
+    throw new StitchError('INVALID_INPUT', 'spacing must be non-negative');
+  }
 
   // Decode metadata and compute each image's extract region.
   const sources = [];
@@ -36,6 +39,9 @@ export async function stitch(buffers, layout = {}) {
     }
     const trimStart = items[i]?.trimStart ?? 0;
     const trimEnd = items[i]?.trimEnd ?? 0;
+    if (trimStart < 0 || trimEnd < 0) {
+      throw new StitchError('INVALID_TRIM', `image ${i} has negative trim`, { index: i });
+    }
     const extent = vertical ? meta.height : meta.width;
     if (trimStart + trimEnd >= extent) {
       throw new StitchError('INVALID_TRIM', `image ${i} trimmed to nothing`, { index: i });
@@ -68,8 +74,14 @@ export async function stitch(buffers, layout = {}) {
   // Place each trimmed image, centered on the cross axis.
   let offset = 0;
   const composites = [];
-  for (const s of sources) {
-    const input = await sharp(s.buffer).extract(s.region).toBuffer();
+  for (let i = 0; i < sources.length; i++) {
+    const s = sources[i];
+    let input;
+    try {
+      input = await sharp(s.buffer).extract(s.region).toBuffer();
+    } catch {
+      throw new StitchError('INVALID_IMAGE', `image ${i} could not be decoded`, { index: i });
+    }
     composites.push(
       vertical
         ? { input, top: offset, left: Math.round((width - s.region.width) / 2) }
