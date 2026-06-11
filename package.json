@@ -1,0 +1,14 @@
+{
+  "name": "pintu",
+  "private": true,
+  "description": "拼图 — 匿名在线长图拼接工具（宝塔/裸机部署入口；Docker 部署见 docker-compose.yml）",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "setup": "npm install --prefix server && npm install --prefix frontend && npm run build --prefix frontend",
+    "build": "npm run build --prefix frontend",
+    "start": "node server/src/index.js",
+    "test": "npm test --prefix server && npm test --prefix frontend"
+  }
+}
